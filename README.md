@@ -1,1 +1,1 @@
-Conformer 2 DFT
+Take a smiles string, find conformers using RDKit and CREST before creating files for Gaussian or ORCA dft optimisation.
