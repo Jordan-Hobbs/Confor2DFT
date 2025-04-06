@@ -1,5 +1,5 @@
 from rdkit import Chem
-from rdkit.Chem import rdDistGeom, rdForceFieldHelpers, Draw
+from rdkit.Chem import rdDistGeom, rdForceFieldHelpers
 
 
 def find_min_confromer(smiles, num_conf: int = 100, max_opt_iters: int = 1000): 
