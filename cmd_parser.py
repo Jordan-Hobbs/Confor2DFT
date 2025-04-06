@@ -1,19 +1,16 @@
 import argparse
-import configparser
+import tomllib
+import utils
+import sys
 
 class ProgramController:
     def __init__(self):
 
-        config = configparser.ConfigParser()
-        config.read("input_config.ini")
-
-        ## Creat parent parser for arguments shared across subparsers
+        ## Create parent parser for arguments shared across subparsers
         self.parent_parser = argparse.ArgumentParser(add_help = False)
-        self.parent_parser.add_argument("-c", "--config", type = str,
-            default = "config_input.ini",
+        self.parent_parser.add_argument("-c", "--Config", type = str,
             help = "Name of the config file used to input required settings"
         )
-
         ## Create parser and subparsers for input arguments
         self.parser = argparse.ArgumentParser(
             prog = "Confor2DFT",
@@ -22,14 +19,14 @@ class ProgramController:
             "optimised molecules."
         )
         self.subparsers = self.parser.add_subparsers(
-            required = True,
+            required = True, dest = "Command",
             help = "Select operating mode, options are crest_write and "
-            "orca_write. In normal operation crest_write acts as the first "
-            "stage while orca_write acts as second stage."
+            "orca_write. In a normal workflow operation crest_write acts as "
+            "the first stage while orca_write acts as the second stage."
         )
-
         ## Create parameters for subparsers. Doesnt need to be in seperate
-        ## functions but it helps keep it tidy
+        ## functions but it helps keep it tidy. Idk if this a "good" thing to 
+        ## do but it works for me.
         self.parse_crest_input()
         self.parse_orca_input()
 
@@ -41,7 +38,7 @@ class ProgramController:
             parents = [self.parent_parser],
             help = "Needs adding"
         )
-        crest_write.add_argument("s", type = str, 
+        crest_write.add_argument("SmilesString", type = str, 
             help = "Smiles string of the compound to be optimised."                   
         )
         crest_write.add_argument("-f", "--FileName", type = str, 
@@ -94,14 +91,24 @@ class ProgramController:
             help = "File name to use for CREST input files."
         )
 
-    def load_config(self, config_file):
-        self.config = configparser.ConfigParser()
-        self.config.read(config_file)
+    def load_from_config(self):
+        """
+        """
+        with open(self.args.Config, "rb") as file:
+            self.config = tomllib.load(file)
 
+        if self.args.Command in self.config:
+            local_config = utils.flatten_dict(self.config.get(self.args.Command))
+            #print(self.parser.parse_known_args())
+            cmdline_args = {arg.lstrip("-") for arg in sys.argv[1:] 
+                  if arg.startswith("-") or arg.startswith("--")}
+            print(cmdline_args)
+            print(self.args)
 
 
     def get_args(self):
         """
         Small function for returning arges from command line
         """
-        return self.parser.parse_args()
+        self.args = self.parser.parse_args()
+        return self.args
