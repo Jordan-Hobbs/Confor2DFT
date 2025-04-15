@@ -97,52 +97,40 @@ class ProgramController:
     def load_from_config(self):
         """
         """
-        default_args = self.check_defaults()
 
         with open(self.args.Config, "rb") as file:
-            self.config = tomllib.load(file)
+            config = tomllib.load(file)
 
-        if self.args.Command in self.config:
-            local_config = utils.flatten_dict(
-                self.config.get(self.args.Command))
+        flat_config = utils.flatten_dict(
+            config.get(self.args.Command))
 
-            ## Replace values in args with config file values
-            for key, value in local_config.items():
-                setattr(self.args, key, value)
+        ## Replace values in args with config file values
+        print(self.args)
+        for key, value in flat_config.items():
+            setattr(self.args, key, value)
 
-            ## Replace values in args with cmdline_args
-            cmdline_args = [arg for arg in sys.argv[2:] 
-                if arg.startswith(("-", "--"))]
-            
-            subparser = self.subparsers.choices[self.args.Command]
-            for action in subparser._actions[2:]:
-                codes = (action.option_strings)
-                if len(codes) > 1:
-                    cmdline_args = [codes[1] if item == codes[0] else 
-                                item for item in cmdline_args]
-
-            print(sys.argv[2:])
-
-    def check_defaults(self):
-        """
+        print(self.args)
+        ## Load args specified on cmd line
+        cmd_line = sys.argv[2:]
+        cmdline_args = [arg for arg in cmd_line if arg.startswith(("-", "--")) and arg not in ("-c", "--Config")]
         
-        """
-        dummy_input = []
+
+        ## Change cmdline_ars from - values to -- values
         subparser = self.subparsers.choices[self.args.Command]
-        for action in subparser._actions:
-            ## It's an optional argument like -f or --file
-            if action.option_strings:
+        for action in subparser._actions[2:]:
+            codes = (action.option_strings)
+            if len(codes) > 1:
+                cmdline_args = [codes[1].strip("--") if item == codes[0] else item for item in cmdline_args]
 
-                continue
-            if action.required or action.nargs in [None, '?']:
-                # Provide a dummy value for required positionals
-                dummy_input.append("DUMMY")
+        ## Load values specified on cmd line
+        cmdline_vals = [cmd_line[i + 1] for i in range(len(cmd_line) - 1) if cmd_line[i].startswith(("-", "--")) and cmd_line[i] not in ("-c", "--Config")]
 
-        default_args = subparser.parse_args(dummy_input)
+        ## Replace values in args with cmd line values
+        cmd_args = dict(zip(cmdline_args, cmdline_vals))
 
-        return default_args
-
-
+        for key, value in cmd_args.items():
+            setattr(self.args, key, value)
+        print(self.args)
 
     def get_args(self):
         """
