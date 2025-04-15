@@ -97,24 +97,15 @@ class ProgramController:
     def load_from_config(self):
         """
         """
-
         with open(self.args.Config, "rb") as file:
             config = tomllib.load(file)
 
         flat_config = utils.flatten_dict(
             config.get(self.args.Command))
 
-        ## Replace values in args with config file values
-        print(self.args)
-        for key, value in flat_config.items():
-            setattr(self.args, key, value)
-
-        print(self.args)
         ## Load args specified on cmd line
-        cmd_line = sys.argv[2:]
-        cmdline_args = [arg for arg in cmd_line if arg.startswith(("-", "--")) and arg not in ("-c", "--Config")]
+        cmdline_args = [arg for arg in sys.argv[2:] if arg.startswith(("-", "--")) and arg not in ("-c", "--Config")]
         
-
         ## Change cmdline_ars from - values to -- values
         subparser = self.subparsers.choices[self.args.Command]
         for action in subparser._actions[2:]:
@@ -122,15 +113,13 @@ class ProgramController:
             if len(codes) > 1:
                 cmdline_args = [codes[1].strip("--") if item == codes[0] else item for item in cmdline_args]
 
-        ## Load values specified on cmd line
-        cmdline_vals = [cmd_line[i + 1] for i in range(len(cmd_line) - 1) if cmd_line[i].startswith(("-", "--")) and cmd_line[i] not in ("-c", "--Config")]
+        ## Remove args specified on cmd line from config file
+        for key in cmdline_args:
+            flat_config.pop(key, None)
 
-        ## Replace values in args with cmd line values
-        cmd_args = dict(zip(cmdline_args, cmdline_vals))
-
-        for key, value in cmd_args.items():
+        ## Replace values in args with config file values
+        for key, value in flat_config.items():
             setattr(self.args, key, value)
-        print(self.args)
 
     def get_args(self):
         """
