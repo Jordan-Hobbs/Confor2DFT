@@ -30,6 +30,9 @@ class ProgramController:
         self.parse_crest_input()
         self.parse_orca_input()
 
+        self.subparser_map = self.subparsers.choices
+
+
     def parse_crest_input(self):
         """
         Create parser for CREST input mode
@@ -94,16 +97,51 @@ class ProgramController:
     def load_from_config(self):
         """
         """
+        default_args = self.check_defaults()
+
         with open(self.args.Config, "rb") as file:
             self.config = tomllib.load(file)
 
         if self.args.Command in self.config:
-            local_config = utils.flatten_dict(self.config.get(self.args.Command))
-            #print(self.parser.parse_known_args())
-            cmdline_args = {arg.lstrip("-") for arg in sys.argv[1:] 
-                  if arg.startswith("-") or arg.startswith("--")}
-            print(cmdline_args)
-            print(self.args)
+            local_config = utils.flatten_dict(
+                self.config.get(self.args.Command))
+
+            ## Replace values in args with config file values
+            for key, value in local_config.items():
+                setattr(self.args, key, value)
+
+            ## Replace values in args with cmdline_args
+            cmdline_args = [arg for arg in sys.argv[2:] 
+                if arg.startswith(("-", "--"))]
+            
+            subparser = self.subparsers.choices[self.args.Command]
+            for action in subparser._actions[2:]:
+                codes = (action.option_strings)
+                if len(codes) > 1:
+                    cmdline_args = [codes[1] if item == codes[0] else 
+                                item for item in cmdline_args]
+
+            print(sys.argv[2:])
+
+    def check_defaults(self):
+        """
+        
+        """
+        dummy_input = []
+        subparser = self.subparsers.choices[self.args.Command]
+        for action in subparser._actions:
+            ## It's an optional argument like -f or --file
+            if action.option_strings:
+
+                continue
+            if action.required or action.nargs in [None, '?']:
+                # Provide a dummy value for required positionals
+                dummy_input.append("DUMMY")
+
+        default_args = subparser.parse_args(dummy_input)
+
+        return default_args
+
 
 
     def get_args(self):

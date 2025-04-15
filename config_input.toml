@@ -8,6 +8,6 @@ MaximumIterations = 1000
 FileName = "CREST_input"
 OptimisationLevel = "extreme"
 GFNMethod = "gfn2"
-NumCPUs = 4
+NumCPUs = 10
 RunTime = "24:00:00"
 Email = "j.l.hobbs@leeds.ac.uk"
