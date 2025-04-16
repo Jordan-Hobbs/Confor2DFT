@@ -1,0 +1,13 @@
+[crest_write]
+
+[crest_write.RDKit_Settings]
+NumberConformers = 100
+MaximumIterations = 1000
+
+[crest_write.CREST_Settings]
+FileName = "CREST_input"
+OptimisationLevel = "extreme"
+GFNMethod = "gfn2"
+NumCPUs = 10
+RunTime = "24:00:00"
+Email = "j.l.hobbs@leeds.ac.uk"

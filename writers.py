@@ -4,20 +4,25 @@ import textwrap
 
 class CRESTWriter:
     def __init__(self, file_name, molecule):
+        print("----------------------------------------------------------------")
+        print("Writing input files:\n")
         self.molecule = molecule
         self.file_name = file_name
     
+        self.write_xyz()
+        self.write_toml()
+        self.write_sh()
+        print("")
 
-    def write_xyz(self,
-        comment: str = "Confor2DFT"
-        ):
+
+    def write_xyz(self):
 
         xyz_pos = self.molecule.GetConformer().GetPositions()
         xyz_pos = np.round(xyz_pos, 3)
         no_atoms = self.molecule.GetConformer().GetNumAtoms()
 
         with open(f"{self.file_name}.xyz", "w", newline="\n") as file:
-            file.write(f"{no_atoms}\n{comment}\n")
+            file.write(f"{no_atoms}\n{self.file_name}\n")
             for index, atom in enumerate(self.molecule.GetAtoms()):
                 atom_symbol = atom.GetSymbol()
                 x,y,z = xyz_pos[index]
@@ -27,7 +32,7 @@ class CRESTWriter:
 
 
     def write_toml(self, 
-        threads = 4, 
+        num_cpus = 4, 
         optlevel = "extreme", 
         gfn_method = "gfn2"
         ):
@@ -42,7 +47,7 @@ class CRESTWriter:
             toml_text = f"""                # CREST 3 input file
                 input = \"{self.file_name}.xyz\"
                 runtype = \"{run_type}\"
-                threads = {threads}
+                threads = {num_cpus}
 
                 [calculation]
                 optlev = \"{optlevel}\"
@@ -59,7 +64,7 @@ class CRESTWriter:
     
 
     def write_sh(self,
-        run_time = "48:00:00",
+        run_time = "24:00:00",
         num_cpus = 4,
         email = "j.l.hobbs@leeds.ac.uk"
         ):
@@ -84,7 +89,7 @@ class CRESTWriter:
         wait
 
         # =============================================
-        # Manage files
+        # Delete files uneeded for Conf gen
         # =============================================
 
         find . -type f ! -name "{self.file_name}.sh" ! -name "crestopt.xyz" ! -name "{self.file_name}_opt.toml" ! -name "{self.file_name}_conf.toml" ! -name "{self.file_name}.out" -delete
