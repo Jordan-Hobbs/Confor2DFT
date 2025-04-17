@@ -1,19 +1,10 @@
 # Confor2DFT
 
-Confor2DFT is a Python tool that integrates CREST and DFT methods to optimize molecular structures. It generates conformers using RDKit and performs optimizations with CREST, writing all necessary input files for the process.
+Confor2DFT is a Python tool that integrates CREST and DFT methods to optimize molecular structures. It generates an initiale structure guess using RDKit to generate the structure. Various options for then optimising and checking the conformational landscape are available. This program is generally set up to work on a SLURM based HPC system, specifically AIRE at the University of Leeds, UK.
 
 ### Author: Dr. Jordan Hobbs  
 University of Leeds  
 [GitHub Repository](https://github.com/Jordan-Hobbs/)
-
----
-
-## Features
-
-- Generate multiple conformers from a molecule using RDKit.
-- Optimize conformers with CREST.
-- Create input files for CREST (`.xyz`, `.toml`, `.sh`).
-- Optionally, prepare ORCA input files for quantum mechanical calculations.
 
 ---
 
@@ -25,7 +16,7 @@ To use Confor2DFT, you need:
 - **RDKit** (for molecular manipulation and conformer generation)
 - **CREST** (for conformer optimization)
 - **ORCA** (for quantum mechanical calculations, optional)
-- **tomllib** (for reading TOML configuration files)
+
 
 You can install the required Python dependencies via `pip`:
 
