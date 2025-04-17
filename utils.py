@@ -1,10 +1,8 @@
-
 def flatten_dict(dictionary):
     """
-    Recursively flattens a nested dictionary. It only retains the keys at their 
+    Recursively flattens a nested dictionary. It only retains the keys at their
     deepest point in the dictionary.
     """
-
     nested_check = is_dict_nested(dictionary)
 
     if nested_check:
@@ -19,13 +17,13 @@ def flatten_dict(dictionary):
                 # Add the key-value pair to the result
                 result[key] = value
         return result
-    
     else:
         return dictionary
 
+
 def is_dict_nested(dictionary):
     """
-    Check if a dictionary is nested (contains at least one dictionary as a 
+    Check if a dictionary is nested (contains at least one dictionary as a
     value).
     """
     if not isinstance(dictionary, dict):

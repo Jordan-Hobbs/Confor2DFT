@@ -1,30 +1,50 @@
 import cmd_parser
-import molecules
-import writers
+import crest_input
+
 
 def main():
+    """Main function to run the program."""
     print("")
     print("   ___                 __               ___   ___    ___   _____ ")
     print("  / __|  ___   _ _    / _|  ___   _ _  |_  ) |   \\  | __| |_   _|")
-    print(" | (__  / _ \\ | ' \\  |  _| / _ \\ | '_|  / /  | |) | | _|    | |  ")
+    print(
+        " | (__  / _ \\ | ' \\  |  _| / _ \\ | '_|  / /  | |) | | _|    | |  "
+    )
     print("  \\___| \\___/ |_||_| |_|   \\___/ |_|   /___| |___/  |_|     |_| ")
-    print("Author: Dr Jordan Hobbs, University of Leeds")
+    print("Author: Dr. Jordan Hobbs, University of Leeds")
     print("https://github.com/Jordan-Hobbs/")
     print("")
 
-    ## Load program settings from cmd line and check for input config file
-    parser = cmd_parser.ProgramController()
+    # Load program settings from command line and check for input config file
+    commands = {
+        "crest_input": crest_input.crest_input
+    }
+
+    # Initialize parser and load config if provided
+    print("\n----------------------------------------------------------------")
+    print("Setting up config:\n")
+    parser = cmd_parser.ProgramController(commands)
     args = parser.get_args()
+
     if args.Config:
-        print("Config file found. Loading parameters from config file")
+        print(
+            "Config input detected. Attempting to load parameters from "
+            "config file."
+        )
         parser.load_from_config()
+    else:
+        print(
+            "No config file provided. Using command line and defaults "
+            "instead."
+        )
 
-    ## Gen minimum conformer
-    #molecule = molecules.find_min_confromer("O=C(OC1=CC(F)=C(C2=CC(F)=C(C(OC3=CC(F)=C(F)C(F)=C3)(F)F)C(F)=C2)C(F)=C1)C4=C(F)C=C(C5OCC(CCC)CO5)C=C4F", 
-    #                            num_conf=2, max_opt_iters=1000)
+    # Execute the function corresponding to the selected command
+    if hasattr(args, 'func'):
+        args.func(args)
+        print("")
+    else:
+        parser.print_help()
 
-    ## Write CREST input files
-    #writers.CRESTWriter("test", molecule)
 
 if __name__ == "__main__":
     main()
