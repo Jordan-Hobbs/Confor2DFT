@@ -1,10 +1,10 @@
-[crest_write]
+[crest_input]
 
-[crest_write.RDKit_Settings]
+[crest_input.RDKit_Settings]
 NumberConformers = 100
 MaximumIterations = 1000
 
-[crest_write.CREST_Settings]
+[crest_input.CREST_Settings]
 FileName = "CREST_input"
 OptimisationLevel = "extreme"
 GFNMethod = "gfn2"
