@@ -37,7 +37,7 @@ class ProgramController:
         """
         Create parser for CREST input mode
         """
-        crest_write = self.subparsers.add_parser("crest_write",
+        crest_write = self.subparsers.add_parser("crest_input",
             parents = [self.parent_parser],
             help = "Needs adding"
         )
@@ -97,8 +97,13 @@ class ProgramController:
     def load_from_config(self):
         """
         """
-        with open(self.args.Config, "rb") as file:
-            config = tomllib.load(file)
+        try:
+            with open(self.args.Config, "rb") as file:
+                config = tomllib.load(file)
+            print("Config file found.")
+        except:
+            print("Config file not found. Using default parameters.")
+            return
 
         flat_config = utils.flatten_dict(
             config.get(self.args.Command))
@@ -120,6 +125,8 @@ class ProgramController:
         ## Replace values in args with config file values
         for key, value in flat_config.items():
             setattr(self.args, key, value)
+        
+        print("Config parameters loaded succesfully.")
 
     def get_args(self):
         """
