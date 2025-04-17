@@ -14,11 +14,4 @@ To use Confor2DFT, you need:
 
 - **Python 3.x**
 - **RDKit** (for molecular manipulation and conformer generation)
-- **CREST** (for conformer optimization)
-- **ORCA** (for quantum mechanical calculations, optional)
-
-
-You can install the required Python dependencies via `pip`:
-
-```bash
-pip install rdkit toml
+- Some ability to run the calulations generated for CREST or ORCA
