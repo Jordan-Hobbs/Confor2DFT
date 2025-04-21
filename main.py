@@ -4,28 +4,25 @@ import crest_input
 
 def main():
     """Main function to run the program."""
-    print("")
-    print("   ___                 __               ___   ___    ___   _____ ")
+    print("\n   ___                 __               ___   ___    ___   _____ ")
     print("  / __|  ___   _ _    / _|  ___   _ _  |_  ) |   \\  | __| |_   _|")
-    print(
-        " | (__  / _ \\ | ' \\  |  _| / _ \\ | '_|  / /  | |) | | _|    | |  "
-    )
+    print(" | (__  / _ \\ | ' \\  |  _| / _ \\ | '_|  / /  | |) | | _|    | |  ")
     print("  \\___| \\___/ |_||_| |_|   \\___/ |_|   /___| |___/  |_|     |_| ")
     print("Author: Dr. Jordan Hobbs, University of Leeds")
-    print("https://github.com/Jordan-Hobbs/")
-    print("")
+    print("https://github.com/Jordan-Hobbs/\n")
 
-    # Load program settings from command line and check for input config file
+    # Sets command functions
     commands = {
         "crest_input": crest_input.crest_input
     }
 
-    # Initialize parser and load config if provided
+    # Initialize parser
     print("\n----------------------------------------------------------------")
     print("Setting up config:\n")
     parser = cmd_parser.ProgramController(commands)
     args = parser.get_args()
 
+    # Loads config file if config file provided
     if args.Config:
         print(
             "Config input detected. Attempting to load parameters from "

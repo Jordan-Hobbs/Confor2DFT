@@ -5,6 +5,7 @@ import writers
 
 
 def crest_input(args):
+    
     # Generate minimum conformer
     molecule = find_min_conformer(
         args.SmilesString,

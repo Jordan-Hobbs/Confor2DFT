@@ -9,9 +9,10 @@ class ProgramController:
     def __init__(self, commands):
         self.commands = commands
 
-        # Create parent parser for arguments shared across subparsers
-        self.parent_parser = argparse.ArgumentParser(add_help=False)
-        self.parent_parser.add_argument(
+        # Create parent parser for arguments shared across all subparsers
+        self.top_parent_parser = argparse.ArgumentParser(add_help=False)
+
+        self.top_parent_parser.add_argument(
             "-c", "--Config",
             type=str,
             help="Name of the config file used to input required settings."
@@ -20,13 +21,13 @@ class ProgramController:
         # Create parser and subparsers for input arguments
         self.parser = argparse.ArgumentParser(
             prog="Confor2DFT",
-            parents=[self.parent_parser],
+            parents=[self.top_parent_parser],
             description=(
                 "Combines CREST and some DFT package to obtain optimised "
                 "molecules."
             )
         )
-        self.subparsers = self.parser.add_subparsers(
+        self.top_subparsers = self.parser.add_subparsers(
             required=True,
             dest="Command",
             help=(
@@ -36,35 +37,65 @@ class ProgramController:
             )
         )
 
-        self.parse_crest_input()
-        self.parse_orca_input()
+        self.parse_conformer_input()
+        #self.parse_orca_input()
 
-    def parse_crest_input(self):
-        """Create parser for CREST input mode."""
-        crest_write = self.subparsers.add_parser(
-            "crest_input",
-            parents=[self.parent_parser],
-            help="Generate input files for CREST conformer search."
+    def parse_conformer_input(self):
+        """Create parser for conformer input mode."""
+        self.conformer_write = self.top_subparsers.add_parser(
+            "conformer_gen",
+            parents=[self.top_parent_parser],
+            help="Generate input files for a conformer search."
         )
 
-        crest_write.add_argument(
+        # Subparser for crest_input modes
+        self.conformer_subparsers = self.conformer_write.add_subparsers(
+            required=True,
+            dest="ConformerMode",
+            help="Specify which package to write input files for."
+        )
+
+        # Create shared args paser for conformer mode
+        self.conformer_common_parser = argparse.ArgumentParser(add_help=False)
+
+        self.conformer_common_parser.add_argument(
             "SmilesString",
             type=str,
             help="SMILES string of the compound to be optimised."
         )
-        crest_write.add_argument(
+        self.conformer_common_parser.add_argument(
             "-f", "--FileName",
             type=str,
             default="conf2dft",
             help="File name to use for CREST input files."
         )
-        crest_write.add_argument(
+        self.conformer_common_parser.add_argument(
+            "-nc", "--NumCPUs",
+            type=int,
+            default=4,
+            help="Number of CPUs allocated to the HPC calculation."
+        )
+        self.conformer_common_parser.add_argument(
+            "-rt", "--RunTime",
+            type=str,
+            default="24:00:00",
+            help="Maximum runtime allowed on the HPC system."
+        )
+        self.conformer_common_parser.add_argument(
+            "-e", "--Email",
+            type=str,
+            help=(
+                "Email address to receive updates on job start, finish, "
+                "and failure."
+            )
+        )
+        self.conformer_common_parser.add_argument(
             "-n", "--NumberConformers",
             type=int,
             default=100,
             help="Number of conformers for the initial RDKit search."
         )
-        crest_write.add_argument(
+        self.conformer_common_parser.add_argument(
             "-m", "--MaximumIterations",
             type=int,
             default=1000,
@@ -73,13 +104,25 @@ class ProgramController:
                 "step."
             )
         )
+
+        # Create confomer sub modes
+        self.parse_conformer_crest_input()
+
+
+    def parse_conformer_crest_input(self):
+
+        crest_write = self.conformer_subparsers.add_parser(
+            "CREST",
+            parents=[self.top_parent_parser, self.conformer_common_parser],
+            help="CREST input mode."
+        )
         crest_write.add_argument(
             "-ol", "--OptimisationLevel",
             type=str,
             default="extreme",
             choices=[
-                "crude", "vloose", "loose", "normal",
-                "tight", "vtight", "extreme"
+                "crude", "vloose", "loose", "normal","tight", "vtight", 
+                "extreme"
             ],
             help="Convergence conditions for the CREST optimisation steps."
         )
@@ -93,27 +136,6 @@ class ProgramController:
                 "conformer searching."
             )
         )
-        crest_write.add_argument(
-            "-nc", "--NumCPUs",
-            type=int,
-            default=4,
-            help="Number of CPUs allocated to the HPC calculation."
-        )
-        crest_write.add_argument(
-            "-rt", "--RunTime",
-            type=str,
-            default="24:00:00",
-            help="Maximum runtime allowed on the HPC system."
-        )
-        crest_write.add_argument(
-            "-e", "--Email",
-            type=str,
-            help=(
-                "Email address to receive updates on job start, finish, "
-                "and failure."
-            )
-        )
-
         crest_write.set_defaults(func=self.commands["crest_input"])
 
     def parse_orca_input(self):
