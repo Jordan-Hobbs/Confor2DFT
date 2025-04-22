@@ -8,8 +8,8 @@ def main():
     print("  / __|  ___   _ _    / _|  ___   _ _  |_  ) |   \\  | __| |_   _|")
     print(" | (__  / _ \\ | ' \\  |  _| / _ \\ | '_|  / /  | |) | | _|    | |  ")
     print("  \\___| \\___/ |_||_| |_|   \\___/ |_|   /___| |___/  |_|     |_| ")
-    print("Author: Dr. Jordan Hobbs, University of Leeds")
-    print("https://github.com/Jordan-Hobbs/\n")
+    print("\nAuthor: Dr. Jordan Hobbs, University of Leeds")
+    print("https://github.com/Jordan-Hobbs/")
 
     # Sets command functions
     commands = {

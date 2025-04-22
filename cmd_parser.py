@@ -38,7 +38,7 @@ class ProgramController:
         )
 
         self.parse_conformer_input()
-        #self.parse_orca_input()
+        self.parse_orca_input()
 
     def parse_conformer_input(self):
         """Create parser for conformer input mode."""
@@ -138,11 +138,19 @@ class ProgramController:
         )
         crest_write.set_defaults(func=self.commands["crest_input"])
 
+    def parse_conformer_orca_input(self):
+
+        orca_write = self.conformer_subparsers.add_parser(
+            "ORCA",
+            parents=[self.top_parent_parser, self.conformer_common_parser],
+            help="ORCA input mode."
+        )
+
     def parse_orca_input(self):
         """Create parser for ORCA input mode."""
-        orca_write = self.subparsers.add_parser(
+        orca_write = self.top_subparsers.add_parser(
             "orca_write",
-            parents=[self.parent_parser],
+            parents=[self.top_parent_parser],
             help="Generate ORCA input files from CREST outputs."
         )
         orca_write.add_argument(
@@ -164,19 +172,28 @@ class ProgramController:
         # Flatten the config file to remove nested structure
         flat_config = utils.flatten_dict(config.get(self.args.Command))
 
-        # Load input args from command line except for -c / --Config
+        # Load input args from command line except for -c or --Config
         cmdline_args = [
             arg for arg in sys.argv[2:]
             if arg.startswith(("-", "--")) and arg not in ("-c", "--Config")
         ]
 
-        # Convert any short arg names in cmdline_args to the long form
-        subparser = self.subparsers.choices[self.args.Command]
+        # Determine if were using "conformer_gen"
+        is_nested = getattr(self.args, "Command", "conformer_gen") == "conformer_gen"
+
+        # Choose the appropriate subparser object
+        parser_source = self.conformer_subparsers if is_nested else self.top_subparsers
+        mode_key = self.args.ConformerMode if is_nested else self.args.Command
+        subparser = parser_source.choices[mode_key]
+
+        # Loop through actions, converts any short arg names in cmdline_args to 
+        # the long form
         for action in subparser._actions[2:]:
             arg_names = action.option_strings
             if len(arg_names) > 1:
+                primary, secondary = arg_names[0], arg_names[1].strip("--")
                 cmdline_args = [
-                    arg_names[1].strip("--") if item == arg_names[0] else item
+                    secondary if item == primary else item
                     for item in cmdline_args
                 ]
 
