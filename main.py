@@ -1,5 +1,5 @@
 import cmd_parser
-import crest_input
+import conformer_gen
 
 
 def main():
@@ -13,7 +13,7 @@ def main():
 
     # Sets command functions
     commands = {
-        "crest_input": crest_input.crest_input
+        "conformer_gen": conformer_gen.conformer_gen
     }
 
     # Initialize parser
@@ -26,7 +26,7 @@ def main():
     if args.Config:
         print(
             "Config input detected. Attempting to load parameters from "
-            "config file."
+            f"\"{args.Config}\""
         )
         parser.load_from_config()
     else:

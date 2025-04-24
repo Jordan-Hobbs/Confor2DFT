@@ -136,7 +136,7 @@ class ProgramController:
                 "conformer searching."
             )
         )
-        crest_write.set_defaults(func=self.commands["crest_input"])
+        crest_write.set_defaults(func=self.commands["conformer_gen"])
 
     def parse_conformer_orca_input(self):
 
@@ -166,7 +166,10 @@ class ProgramController:
                 config = tomllib.load(file)
             print("Config file found.")
         except FileNotFoundError:
-            print("Config file not found. Using default parameters.")
+            print(
+                f"Config file not found. Is \"{self.args.Config}\" a valid path? "
+                "Using default parameters."
+            )
             return
 
         # Flatten the config file to remove nested structure
