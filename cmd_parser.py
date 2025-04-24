@@ -107,6 +107,7 @@ class ProgramController:
 
         # Create confomer sub modes
         self.parse_conformer_crest_input()
+        self.parse_conformer_orca_input()
 
 
     def parse_conformer_crest_input(self):
@@ -143,8 +144,16 @@ class ProgramController:
         orca_write = self.conformer_subparsers.add_parser(
             "ORCA",
             parents=[self.top_parent_parser, self.conformer_common_parser],
-            help="ORCA input mode."
+            help="ORCA input mode using ORCA GOAT."
         )
+        orca_write.add_argument(
+            "-g", "--GOATMode",
+            type=str,
+            default="GOAT",
+            choices=["GOAT", "GOAT-ENTROPY", "GOAT-EXPLORE"],
+            help=("Specific mode for ORCA GOAT to run using.")
+        )
+        orca_write.set_defaults(func=self.commands["conformer_gen"])
 
     def parse_orca_input(self):
         """Create parser for ORCA input mode."""
