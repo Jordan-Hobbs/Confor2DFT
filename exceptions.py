@@ -1,0 +1,2 @@
+class InvalidSmilesError(Exception):
+    pass

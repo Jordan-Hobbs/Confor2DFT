@@ -2,38 +2,33 @@ from rdkit import Chem
 from rdkit.Chem import rdDistGeom, rdForceFieldHelpers
 
 import writers
-
+from exceptions import InvalidSmilesError
 
 def crest_input(args):
-    
-    # Generate minimum conformer
-    molecule = find_min_conformer(
-        args.SmilesString,
-        num_conf=args.NumberConformers,
-        max_opt_iters=args.MaximumIterations
-    )
-
-    # Write CREST input files
-    writers.CRESTWriter(
-        molecule,
-        args.FileName
-    )
-
+    try:
+        molecule = find_min_conformer(
+            args.SmilesString,
+            num_conf=args.NumberConformers,
+            max_opt_iters=args.MaximumIterations
+        )
+        writers.CRESTWriter(molecule, args.FileName)
+    except InvalidSmilesError as e:
+        print(f"Error: {e}. Please provide a valid SMILES code")
 
 def find_min_conformer(smiles, num_conf: int = 100, max_opt_iters: int = 1000):
     print("\n----------------------------------------------------------------")
     print("Generating initial CREST input structure:\n")
 
-    # Generate structure of a random unoptimized conformer from input SMILES 
-    # string
     molecule = Chem.MolFromSmiles(smiles)
+    if molecule is None:
+        raise InvalidSmilesError(f"Invalid SMILES string: '{smiles}'")
+
     molecule_h = Chem.AddHs(molecule)
     Chem.rdCoordGen.AddCoords(molecule_h)
 
-    # Generate conformers and optimize them
     print(
         f"Generating {num_conf} conformers for initial sorting and "
-        "optimisation using RDKit."
+        "optimization using RDKit."
     )
     rdDistGeom.EmbedMultipleConfs(
         molecule_h,
@@ -46,13 +41,11 @@ def find_min_conformer(smiles, num_conf: int = 100, max_opt_iters: int = 1000):
         ignoreInterfragInteractions=False
     )
 
-    # Check convergence of optimization
     if all(conf_set[0] == 0 for conf_set in conf_energy):
         print("All conformers converged.")
     else:
         print("WARNING! Not all conformers converged.")
 
-    # Find minimum energy conformer
     min_energy = float("inf")
     min_index = 0
     for index, (_, energy) in enumerate(conf_energy):
