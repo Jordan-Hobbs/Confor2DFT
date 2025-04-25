@@ -17,7 +17,7 @@ class CRESTWriter:
     def write_xyz(self):
         """Write the XYZ file containing molecular coordinates."""
         xyz_pos = self.molecule.GetConformer().GetPositions()
-        xyz_pos = np.round(xyz_pos, 3)
+        xyz_pos = np.round(xyz_pos, 4)
         no_atoms = self.molecule.GetConformer().GetNumAtoms()
 
         with open(f"{self.file_name}.xyz", "w", newline="\n") as file:
@@ -57,47 +57,43 @@ class CRESTWriter:
 
     def write_sh(self, run_time="24:00:00", num_cpus=4, email="j.l.hobbs@leeds.ac.uk"):
         """Write the SLURM shell script to run CREST jobs."""
-        sh_text = f"""\
-            #!/bin/bash
-            #SBATCH --job-name={self.file_name}
-            #SBATCH --output={self.file_name}.out
-            #SBATCH --time={run_time}
-            #SBATCH --ntasks=1
-            #SBATCH --mem-per-cpu=1G
-            #SBATCH --cpus-per-task={num_cpus}
-            #SBATCH --mail-type=BEGIN,END,FAIL
-            #SBATCH --mail-user={email}
-
-            module load crest
-
-            # =============================================
-            # Optimise initial structure
-            # =============================================
-
-            crest {self.file_name}_opt.toml
-            wait
-
-            # =============================================
-            # Delete files unneeded for Conf gen
-            # =============================================
-
-            find . -type f ! -name "{self.file_name}.sh" \\
-                             ! -name "crestopt.xyz" \\
-                             ! -name "{self.file_name}_opt.toml" \\
-                             ! -name "{self.file_name}_conf.toml" \\
-                             ! -name "{self.file_name}.out" -delete
-
-            mv "crestopt.xyz" "{self.file_name}.xyz"
-
-            # =============================================
-            # Generate and optimise conformer ensemble
-            # =============================================
-
-            crest {self.file_name}_conf.toml
-            wait
-        """
+        sh_text =(
+            "#!/bin/bash\n"
+            f"#SBATCH --job-name={self.file_name}\n"
+            f"#SBATCH --output={self.file_name}.out\n"
+            f"#SBATCH --time={run_time}\n"
+            "#SBATCH --ntasks=1\n"
+            "#SBATCH --mem-per-cpu=1G\n"
+            f"#SBATCH --cpus-per-task={num_cpus}\n"
+            "#SBATCH --mail-type=BEGIN,END,FAIL\n"
+            f"#SBATCH --mail-user={email}\n"
+            "\n"
+            "module load crest\n"
+            "\n"
+            "# =============================================\n"
+            "# Optimise initial structure\n"
+            "# =============================================\n"
+            "\n"
+            f"crest {self.file_name}_opt.toml\n"
+            "wait\n"
+            "\n"
+            "# =============================================\n"
+            "# Delete files unneeded for Conf gen\n"
+            "# =============================================\n"
+            "\n"
+            f"find . -type f ! -name \"{self.file_name}.sh\" ! -name \"crestopt.xyz\" ! -name \"{self.file_name}_opt.toml\" ! -name \"{self.file_name}_conf.toml\" ! -name \"{self.file_name}.out\" -delete\n"
+            "\n"
+            f"mv \"crestopt.xyz\" \"{self.file_name}.xyz\"\n"
+            "\n"
+            "# =============================================\n"
+            "# Generate and optimise conformer ensemble\n"
+            "# =============================================\n"
+            "\n"
+            f"crest {self.file_name}_conf.toml\n"
+            "wait\n"
+        )
 
         with open(f"{self.file_name}.sh", "w", newline="\n") as file:
-            file.write(textwrap.dedent(sh_text))
+            file.write(sh_text)
 
         print(f"{self.file_name}.sh file written successfully")
