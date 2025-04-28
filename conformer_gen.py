@@ -8,17 +8,37 @@ def conformer_gen(args):
     try:
         molecule = find_min_conformer(
             args.SmilesString,
-            num_conf=args.NumberConformers,
-            max_opt_iters=args.MaximumIterations
+            num_conf = args.NumberConformers,
+            max_opt_iters = args.MaximumIterations
         )
     except InvalidSmilesError as e:
         print(f"Error: {e}. Please provide a valid SMILES code")
         return
     
-    if args.ConformerMode == "CREST":
-        writers.CRESTWriter(molecule, args.FileName)
-    elif args.ConformerMode == "ORCA":
-        print("stuff")
+    if args.ConformerMode == "crest":
+        crest_files = writers.CRESTWriter(molecule, args.FileName)
+        crest_files.write_xyz()
+        crest_files.write_toml(
+            num_cpus = args.NumCPUs, 
+            optlevel = args.OptimisationLevel,
+            gfn_method = args.CRESTMethod
+        )
+        crest_files.write_sh(
+            run_time = args.RunTime,
+            num_cpus = args.NumCPUs,
+            email = args.Email
+        )
+    elif args.ConformerMode == "orca":
+        orca_files = writers.ORCAWriter(molecule, args.FileName)
+        orca_files.write_inp(
+            mode = args.GOATMode,
+            method = args.GOATMethod
+        )
+        orca_files.write_sh(
+            run_time = args.RunTime,
+            num_cpus = args.NumCPUs,
+            email = args.Email
+        )
 
 def find_min_conformer(smiles, num_conf: int = 100, max_opt_iters: int = 1000):
     print("\n----------------------------------------------------------------")

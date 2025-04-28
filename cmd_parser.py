@@ -20,7 +20,7 @@ class ProgramController:
 
         # Create parser and subparsers for input arguments
         self.parser = argparse.ArgumentParser(
-            prog="Confor2DFT",
+            prog="ConforDFT",
             parents=[self.top_parent_parser],
             description=(
                 "Combines CREST and some DFT package to obtain optimised "
@@ -66,8 +66,8 @@ class ProgramController:
         self.conformer_common_parser.add_argument(
             "-f", "--FileName",
             type=str,
-            default="conf2dft",
-            help="File name to use for CREST input files."
+            default="confdft",
+            help="File name to use for conformer_gen input files."
         )
         self.conformer_common_parser.add_argument(
             "-nc", "--NumCPUs",
@@ -113,7 +113,7 @@ class ProgramController:
     def parse_conformer_crest_input(self):
 
         crest_write = self.conformer_subparsers.add_parser(
-            "CREST",
+            "crest",
             parents=[self.top_parent_parser, self.conformer_common_parser],
             help="CREST input mode."
         )
@@ -128,7 +128,7 @@ class ProgramController:
             help="Convergence conditions for the CREST optimisation steps."
         )
         crest_write.add_argument(
-            "-xtb", "--GFNMethod",
+            "-me", "--CRESTMethod",
             type=str,
             default="gfn2",
             choices=["gfnff", "gfn0", "gfn1", "gfn2"],
@@ -142,16 +142,26 @@ class ProgramController:
     def parse_conformer_orca_input(self):
 
         orca_write = self.conformer_subparsers.add_parser(
-            "ORCA",
+            "orca",
             parents=[self.top_parent_parser, self.conformer_common_parser],
             help="ORCA input mode using ORCA GOAT."
         )
         orca_write.add_argument(
-            "-g", "--GOATMode",
+            "-mo", "--GOATMode",
             type=str,
             default="GOAT",
             choices=["GOAT", "GOAT-ENTROPY", "GOAT-EXPLORE"],
             help=("Specific mode for ORCA GOAT to run using.")
+        )
+        orca_write.add_argument(
+            "-me", "--GOATMethod",
+            type=str,
+            default="gfn2",
+            choices=["gfnff", "gfn0", "gfn1", "gfn2"],
+            help=(
+                "Tight binding method used by ORCA for optimisation and "
+                "conformer searching."
+            )
         )
         orca_write.set_defaults(func=self.commands["conformer_gen"])
 
@@ -162,12 +172,7 @@ class ProgramController:
             parents=[self.top_parent_parser],
             help="Generate ORCA input files from CREST outputs."
         )
-        orca_write.add_argument(
-            "-f",
-            type=str,
-            default="conf2dft",
-            help="File name to use for ORCA input files."
-        )
+
 
     def load_from_config(self):
         try:
