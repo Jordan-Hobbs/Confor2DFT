@@ -1,5 +1,4 @@
 import numpy as np
-import textwrap
 from rdkit.Chem import Mol
 
 
@@ -127,7 +126,7 @@ class CRESTWriter:
 
             toml_name = f"{self.file_name}_{run}.toml"
             with open(toml_name, "w", newline="\n") as file:
-                file.write(textwrap.dedent(toml_text))
+                file.write(toml_text)
 
             print(f"{toml_name} file written successfully")
 
