@@ -1,12 +1,14 @@
 import argparse
 import tomllib
 import sys
+from typing import Any, Dict
 
 import utils
 
 
 class ProgramController:
-    def __init__(self, commands):
+    def __init__(self, commands: Dict[str, Any]) -> None:
+        """Initialize the ProgramController with available commands."""
         self.commands = commands
 
         # Create parent parser for arguments shared across all subparsers
@@ -23,7 +25,7 @@ class ProgramController:
             prog="ConforDFT",
             parents=[self.top_parent_parser],
             description=(
-                "Combines CREST and some DFT package to obtain optimised "
+                "Combines CREST and a DFT package to obtain optimised "
                 "molecules."
             )
         )
@@ -31,16 +33,16 @@ class ProgramController:
             required=True,
             dest="Command",
             help=(
-                "Select operating mode: 'crest_input' or 'orca_write'. "
-                "In a typical workflow, 'crest_input' is the first stage, "
-                "followed by 'orca_write'."
+                "Select operating mode: \"crest_input\" or \"orca_write\". "
+                "Typical workflow: \"conformation_gen\" first, then "
+                "\"orca_write\"."
             )
         )
 
         self.parse_conformer_input()
         self.parse_orca_input()
 
-    def parse_conformer_input(self):
+    def parse_conformer_input(self) -> None:
         """Create parser for conformer input mode."""
         self.conformer_write = self.top_subparsers.add_parser(
             "conformer_gen",
@@ -48,14 +50,13 @@ class ProgramController:
             help="Generate input files for a conformer search."
         )
 
-        # Subparser for crest_input modes
         self.conformer_subparsers = self.conformer_write.add_subparsers(
             required=True,
             dest="ConformerMode",
             help="Specify which package to write input files for."
         )
 
-        # Create shared args paser for conformer mode
+        # Create shared args parser for conformer mode
         self.conformer_common_parser = argparse.ArgumentParser(add_help=False)
 
         self.conformer_common_parser.add_argument(
@@ -105,13 +106,11 @@ class ProgramController:
             )
         )
 
-        # Create confomer sub modes
         self.parse_conformer_crest_input()
         self.parse_conformer_orca_input()
 
-
-    def parse_conformer_crest_input(self):
-
+    def parse_conformer_crest_input(self) -> None:
+        """Create parser for CREST conformer input mode."""
         crest_write = self.conformer_subparsers.add_parser(
             "crest",
             parents=[self.top_parent_parser, self.conformer_common_parser],
@@ -122,10 +121,10 @@ class ProgramController:
             type=str,
             default="extreme",
             choices=[
-                "crude", "vloose", "loose", "normal","tight", "vtight", 
-                "extreme"
+                "crude", "vloose", "loose", "normal",
+                "tight", "vtight", "extreme"
             ],
-            help="Convergence conditions for the CREST optimisation steps."
+            help="Convergence conditions for CREST optimisation steps."
         )
         crest_write.add_argument(
             "-me", "--CRESTMethod",
@@ -139,8 +138,8 @@ class ProgramController:
         )
         crest_write.set_defaults(func=self.commands["conformer_gen"])
 
-    def parse_conformer_orca_input(self):
-
+    def parse_conformer_orca_input(self) -> None:
+        """Create parser for ORCA conformer input mode."""
         orca_write = self.conformer_subparsers.add_parser(
             "orca",
             parents=[self.top_parent_parser, self.conformer_common_parser],
@@ -151,7 +150,7 @@ class ProgramController:
             type=str,
             default="GOAT",
             choices=["GOAT", "GOAT-ENTROPY", "GOAT-EXPLORE"],
-            help=("Specific mode for ORCA GOAT to run using.")
+            help="Specific mode for ORCA GOAT to run."
         )
         orca_write.add_argument(
             "-me", "--GOATMethod",
@@ -159,52 +158,52 @@ class ProgramController:
             default="gfn2",
             choices=["gfnff", "gfn0", "gfn1", "gfn2"],
             help=(
-                "Tight binding method used by ORCA for optimisation and "
-                "conformer searching."
+                "Tight binding method used by ORCA GOAT for optimisation "
+                "and conformer searching."
             )
         )
         orca_write.set_defaults(func=self.commands["conformer_gen"])
 
-    def parse_orca_input(self):
+    def parse_orca_input(self) -> None:
         """Create parser for ORCA input mode."""
-        orca_write = self.top_subparsers.add_parser(
+        self.top_subparsers.add_parser(
             "orca_write",
             parents=[self.top_parent_parser],
             help="Generate ORCA input files from CREST outputs."
         )
 
-
-    def load_from_config(self):
+    def load_from_config(self) -> None:
+        """Load configuration parameters from a TOML file if provided."""
         try:
             with open(self.args.Config, "rb") as file:
                 config = tomllib.load(file)
             print("Config file found.")
         except FileNotFoundError:
             print(
-                f"Config file not found. Is \"{self.args.Config}\" a valid path? "
-                "Using default parameters."
+                f"Config file not found. Is \"{self.args.Config}\" a valid "
+                "path? Using default parameters instead."
             )
             return
 
-        # Flatten the config file to remove nested structure
         flat_config = utils.flatten_dict(config.get(self.args.Command))
 
-        # Load input args from command line except for -c or --Config
+        # Load input args from command line except -c / --Config
         cmdline_args = [
             arg for arg in sys.argv[2:]
             if arg.startswith(("-", "--")) and arg not in ("-c", "--Config")
         ]
 
-        # Determine if were using "conformer_gen"
-        is_nested = getattr(self.args, "Command", "conformer_gen") == "conformer_gen"
+        is_nested = getattr(
+            self.args, "Command", "conformer_gen"
+        ) == "conformer_gen"
 
-        # Choose the appropriate subparser object
-        parser_source = self.conformer_subparsers if is_nested else self.top_subparsers
+        parser_source = (
+            self.conformer_subparsers if is_nested else self.top_subparsers
+        )
         mode_key = self.args.ConformerMode if is_nested else self.args.Command
         subparser = parser_source.choices[mode_key]
 
-        # Loop through actions, converts any short arg names in cmdline_args to 
-        # the long form
+        # Convert short arg names to long form
         for action in subparser._actions[2:]:
             arg_names = action.option_strings
             if len(arg_names) > 1:
@@ -224,7 +223,7 @@ class ProgramController:
 
         print("Config parameters loaded successfully.")
 
-    def get_args(self):
+    def get_args(self) -> argparse.Namespace:
         """Parse and return command-line arguments."""
         self.args = self.parser.parse_args()
         return self.args
