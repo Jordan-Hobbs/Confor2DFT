@@ -44,13 +44,13 @@ class ProgramController:
 
     def parse_conf_gen_input(self) -> None:
         """Create parser for conformer input mode."""
-        self.conf_gen_write = self.top_subparsers.add_parser(
+        self.conf_gen = self.top_subparsers.add_parser(
             "conformer_gen",
             parents=[self.top_parent_parser],
             help="Generate input files for a conformer search."
         )
 
-        self.conf_gen_subparsers = self.conf_gen_write.add_subparsers(
+        self.conf_gen_subparsers = self.conf_gen.add_subparsers(
             required=True,
             dest="ConformerMode",
             help="Specify which package to write input files for."
