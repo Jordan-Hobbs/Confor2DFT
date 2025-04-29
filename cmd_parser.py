@@ -33,56 +33,56 @@ class ProgramController:
             required=True,
             dest="Command",
             help=(
-                "Select operating mode: \"crest_input\" or \"orca_write\". "
+                "Select operating mode: \"conformation_gen\" or \"conformation_sort\". "
                 "Typical workflow: \"conformation_gen\" first, then "
-                "\"orca_write\"."
+                "\"conformation_sort\"."
             )
         )
 
-        self.parse_conformer_input()
-        self.parse_orca_input()
+        self.parse_conf_gen_input()
+        self.parse_sort_input()
 
-    def parse_conformer_input(self) -> None:
+    def parse_conf_gen_input(self) -> None:
         """Create parser for conformer input mode."""
-        self.conformer_write = self.top_subparsers.add_parser(
+        self.conf_gen_write = self.top_subparsers.add_parser(
             "conformer_gen",
             parents=[self.top_parent_parser],
             help="Generate input files for a conformer search."
         )
 
-        self.conformer_subparsers = self.conformer_write.add_subparsers(
+        self.conf_gen_subparsers = self.conf_gen_write.add_subparsers(
             required=True,
             dest="ConformerMode",
             help="Specify which package to write input files for."
         )
 
         # Create shared args parser for conformer mode
-        self.conformer_common_parser = argparse.ArgumentParser(add_help=False)
+        self.conf_gen_common_parser = argparse.ArgumentParser(add_help=False)
 
-        self.conformer_common_parser.add_argument(
+        self.conf_gen_common_parser.add_argument(
             "SmilesString",
             type=str,
             help="SMILES string of the compound to be optimised."
         )
-        self.conformer_common_parser.add_argument(
+        self.conf_gen_common_parser.add_argument(
             "-f", "--FileName",
             type=str,
             default="confdft",
             help="File name to use for conformer_gen input files."
         )
-        self.conformer_common_parser.add_argument(
+        self.conf_gen_common_parser.add_argument(
             "-nc", "--NumCPUs",
             type=int,
             default=4,
             help="Number of CPUs allocated to the HPC calculation."
         )
-        self.conformer_common_parser.add_argument(
+        self.conf_gen_common_parser.add_argument(
             "-rt", "--RunTime",
             type=str,
             default="24:00:00",
             help="Maximum runtime allowed on the HPC system."
         )
-        self.conformer_common_parser.add_argument(
+        self.conf_gen_common_parser.add_argument(
             "-e", "--Email",
             type=str,
             help=(
@@ -90,13 +90,13 @@ class ProgramController:
                 "and failure."
             )
         )
-        self.conformer_common_parser.add_argument(
+        self.conf_gen_common_parser.add_argument(
             "-n", "--NumberConformers",
             type=int,
             default=100,
             help="Number of conformers for the initial RDKit search."
         )
-        self.conformer_common_parser.add_argument(
+        self.conf_gen_common_parser.add_argument(
             "-m", "--MaximumIterations",
             type=int,
             default=1000,
@@ -106,14 +106,14 @@ class ProgramController:
             )
         )
 
-        self.parse_conformer_crest_input()
+        self.parse_conf_gen_crest_input()
         self.parse_conformer_orca_input()
 
-    def parse_conformer_crest_input(self) -> None:
+    def parse_conf_gen_crest_input(self) -> None:
         """Create parser for CREST conformer input mode."""
-        crest_write = self.conformer_subparsers.add_parser(
+        crest_write = self.conf_gen_subparsers.add_parser(
             "crest",
-            parents=[self.top_parent_parser, self.conformer_common_parser],
+            parents=[self.top_parent_parser, self.conf_gen_common_parser],
             help="CREST input mode."
         )
         crest_write.add_argument(
@@ -140,9 +140,9 @@ class ProgramController:
 
     def parse_conformer_orca_input(self) -> None:
         """Create parser for ORCA conformer input mode."""
-        orca_write = self.conformer_subparsers.add_parser(
+        orca_write = self.conf_gen_subparsers.add_parser(
             "orca",
-            parents=[self.top_parent_parser, self.conformer_common_parser],
+            parents=[self.top_parent_parser, self.conf_gen_common_parser],
             help="ORCA input mode using ORCA GOAT."
         )
         orca_write.add_argument(
@@ -164,13 +164,29 @@ class ProgramController:
         )
         orca_write.set_defaults(func=self.commands["conformer_gen"])
 
-    def parse_orca_input(self) -> None:
+    def parse_sort_input(self) -> None:
         """Create parser for ORCA input mode."""
         self.top_subparsers.add_parser(
-            "orca_write",
+            "conformer_sort",
             parents=[self.top_parent_parser],
-            help="Generate ORCA input files from CREST outputs."
+            help=(
+                "Generate optimisation input files for ORCA based on the "
+                "results of an CREST or ORCA GOAT conformation analysis "
+                "calculation."
+            )
         )
+
+
+
+
+
+
+
+
+
+
+
+
 
     def load_from_config(self) -> None:
         """Load configuration parameters from a TOML file if provided."""
@@ -196,9 +212,8 @@ class ProgramController:
         is_nested = getattr(
             self.args, "Command", "conformer_gen"
         ) == "conformer_gen"
-
         parser_source = (
-            self.conformer_subparsers if is_nested else self.top_subparsers
+            self.conf_gen_subparsers if is_nested else self.top_subparsers
         )
         mode_key = self.args.ConformerMode if is_nested else self.args.Command
         subparser = parser_source.choices[mode_key]

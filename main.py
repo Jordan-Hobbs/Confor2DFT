@@ -1,7 +1,6 @@
 import cmd_parser
 import conformer_gen
 
-
 def main():
     """Main function to run the program."""
 
