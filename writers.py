@@ -5,14 +5,14 @@ from rdkit.Chem import Mol
 class ORCAWriter:
     """Class to generate ORCA input and SLURM shell files."""
 
-    def __init__(self, molecule: Mol, file_name: str) -> None:
+    def __init__(self, molecule: Mol, args) -> None:
         """Initialize ORCAWriter with a molecule and a file name."""
         print("\n----------------------------------------------------------------")
         print("Writing ORCA input files:\n")
         self.molecule = molecule
-        self.file_name = file_name
+        self.args = args
 
-    def write_inp(self, mode: str, method: str) -> None:
+    def write_inp(self) -> None:
         """Write the .inp file containing molecular coordinates."""
         xyz_pos = self.molecule.GetConformer().GetPositions()
         xyz_pos = np.round(xyz_pos, 4)
@@ -23,36 +23,52 @@ class ORCAWriter:
             "gfn1": "XTB1",
             "gfn2": "XTB2"
         }
-
-        header_text = (
-            f"!{mode} {methods.get(method)}\n"
-            "* xyz 0 1\n"
+        methods_text = (
+            f"!{self.args.GOATMode} {methods.get(self.args.GOATMethod)}\n"
         )
 
-        with open(f"{self.file_name}.inp", "w", newline="\n") as file:
-            file.write(header_text)
+        scf_lines = []
+        include_GOATOptLevel = (
+            self.args.GOATOptLevel is not None 
+            and self.args.GOATOptLevel.lower() != "default"
+        )
+        include_convforced = self.args.ConvForced is not None
+        if include_GOATOptLevel or include_convforced:
+            scf_lines.append("%scf")
+            if include_GOATOptLevel:
+                scf_lines.append(f" Convergence {self.args.GOATOptLevel}")
+            if include_convforced:
+                scf_lines.append(f" ConvForced {1 if self.args.ConvForced is True else 0}")
+            scf_lines.append("end")
+        scf_block = "\n".join(scf_lines) + "\n"
+
+        with open(f"{self.args.FileName}.inp", "w", newline="\n") as file:
+            file.write(methods_text)
+            if scf_block:
+                file.write(scf_block)
+            file.write("* xyz 0 1\n")
             for index, atom in enumerate(self.molecule.GetAtoms()):
                 atom_symbol = atom.GetSymbol()
                 x, y, z = xyz_pos[index]
                 file.write(f"{atom_symbol} {x} {y} {z}\n")
 
-        print(f"{self.file_name}.inp file written successfully")
+        print(f"{self.args.FileName}.inp file written successfully")
 
-    def write_sh(self, run_time: str = "24:00:00", num_cpus: int = 4, email: str = "j.l.hobbs@leeds.ac.uk") -> None:
+    def write_sh(self) -> None:
         """Write the SLURM shell script to run ORCA jobs."""
         sh_text = (
             "#!/bin/bash\n"
-            f"#SBATCH --job-name={self.file_name}\n"
-            f"#SBATCH --time={run_time}\n"
+            f"#SBATCH --job-name={self.args.FileName}\n"
+            f"#SBATCH --time={self.args.RunTime}\n"
             "#SBATCH --ntasks=1\n"
             "#SBATCH --mem-per-cpu=1G\n"
-            f"#SBATCH --cpus-per-task={num_cpus}\n"
+            f"#SBATCH --cpus-per-task={self.args.NumCPUs}\n"
             "#SBATCH --mail-type=BEGIN,END,FAIL\n"
-            f"#SBATCH --mail-user={email}\n"
+            f"#SBATCH --mail-user={self.args.Email}\n"
             "\n"
             "module load orca\n"
             "\n"
-            "INPUT_FILE=\"{self.file_name}\"\n"
+            f"INPUT_FILE=\"{self.args.FileName}\"\n"
             "LAUNCH_DIR=$PWD\n"
             "WORKING_DIR=\"/mnt/flash/tmp/job.$SLURM_JOB_ID\"\n"
             "mkdir -p \"${WORKING_DIR}\"\n"
@@ -68,21 +84,21 @@ class ORCAWriter:
             "rm -rf \"${WORKING_DIR}\"\n"
         )
 
-        with open(f"{self.file_name}.sh", "w", newline="\n") as file:
+        with open(f"{self.args.FileName}.sh", "w", newline="\n") as file:
             file.write(sh_text)
 
-        print(f"{self.file_name}.sh file written successfully")
+        print(f"{self.args.FileName}.sh file written successfully")
 
 
 class CRESTWriter:
     """Class to generate CREST input, TOML, and SLURM shell files."""
 
-    def __init__(self, molecule: Mol, file_name: str) -> None:
+    def __init__(self, molecule: Mol, args) -> None:
         """Initialize CRESTWriter with a molecule and a file name."""
         print("\n----------------------------------------------------------------")
         print("Writing CREST input files:\n")
         self.molecule = molecule
-        self.file_name = file_name
+        self.args = args
 
     def write_xyz(self) -> None:
         """Write the .xyz file containing molecular coordinates."""
@@ -95,16 +111,16 @@ class CRESTWriter:
             f"{self.file_name}\n"
         )
 
-        with open(f"{self.file_name}.xyz", "w", newline="\n") as file:
+        with open(f"{self.args.FileName}.xyz", "w", newline="\n") as file:
             file.write(header_text)
             for index, atom in enumerate(self.molecule.GetAtoms()):
                 atom_symbol = atom.GetSymbol()
                 x, y, z = xyz_pos[index]
                 file.write(f"{atom_symbol} {x} {y} {z}\n")
 
-        print(f"{self.file_name}.xyz file written successfully")
+        print(f"{self.args.FileName}.xyz file written successfully")
 
-    def write_toml(self, num_cpus: int = 4, optlevel: str = "extreme", gfn_method: str = "gfn2") -> None:
+    def write_toml(self) -> None:
         """Write TOML files for CREST runs (optimization and conformer generation)."""
         run_types = ("opt", "conf")
 
@@ -113,54 +129,54 @@ class CRESTWriter:
 
             toml_text = (
                 "# CREST 3 input file"
-                f"input = \"{self.file_name}.xyz\""
+                f"input = \"{self.args.FileName}.xyz\""
                 f"runtype = \"{run_type}\""
-                f"threads = {num_cpus}"
+                f"threads = {self.args.NumCPUs}"
                 ""
                 "[calculation]"
-                f"optlev = \"{optlevel}\""
+                f"optlev = \"{self.args.CRESTOptLevel}\""
                 ""
                 "[[calculation.level]]"
-                f"method = \"{gfn_method}\""
+                f"method = \"{self.args.CRESTMethod}\""
             )
 
-            toml_name = f"{self.file_name}_{run}.toml"
+            toml_name = f"{self.args.FileName}_{run}.toml"
             with open(toml_name, "w", newline="\n") as file:
                 file.write(toml_text)
 
             print(f"{toml_name} file written successfully")
 
-    def write_sh(self, run_time: str = "24:00:00", num_cpus: int = 4, email: str = "j.l.hobbs@leeds.ac.uk") -> None:
+    def write_sh(self) -> None:
         """Write the SLURM shell script to run CREST jobs."""
         sh_text = (
             "#!/bin/bash\n"
-            f"#SBATCH --job-name={self.file_name}\n"
-            f"#SBATCH --output={self.file_name}.out\n"
-            f"#SBATCH --time={run_time}\n"
+            f"#SBATCH --job-name={self.args.FileName}\n"
+            f"#SBATCH --output={self.args.FileName}.out\n"
+            f"#SBATCH --time={self.args.RunTime}\n"
             "#SBATCH --ntasks=1\n"
             "#SBATCH --mem-per-cpu=1G\n"
-            f"#SBATCH --cpus-per-task={num_cpus}\n"
+            f"#SBATCH --cpus-per-task={self.args.NumCPUs}\n"
             "#SBATCH --mail-type=BEGIN,END,FAIL\n"
-            f"#SBATCH --mail-user={email}\n"
+            f"#SBATCH --mail-user={self.args.Email}\n"
             "\n"
             "module load crest\n"
             "\n"
-            f"crest {self.file_name}_opt.toml\n"
+            f"crest {self.args.FileName}_opt.toml\n"
             "wait\n"
             "\n"
-            f"find . -type f ! -name \"{self.file_name}.sh\" "
+            f"find . -type f ! -name \"{self.args.FileName}.sh\" "
             f"! -name \"crestopt.xyz\" "
-            f"! -name \"{self.file_name}_opt.toml\" "
-            f"! -name \"{self.file_name}_conf.toml\" "
-            f"! -name \"{self.file_name}.out\" -delete\n"
+            f"! -name \"{self.args.FileName}_opt.toml\" "
+            f"! -name \"{self.args.FileName}_conf.toml\" "
+            f"! -name \"{self.args.FileName}.out\" -delete\n"
             "\n"
-            f"mv \"crestopt.xyz\" \"{self.file_name}.xyz\"\n"
+            f"mv \"crestopt.xyz\" \"{self.args.FileName}.xyz\"\n"
             "\n"
-            f"crest {self.file_name}_conf.toml\n"
+            f"crest {self.args.FileName}_conf.toml\n"
             "wait\n"
         )
 
-        with open(f"{self.file_name}.sh", "w", newline="\n") as file:
+        with open(f"{self.args.FileName}.sh", "w", newline="\n") as file:
             file.write(sh_text)
 
-        print(f"{self.file_name}.sh file written successfully")
+        print(f"{self.args.FileName}.sh file written successfully")

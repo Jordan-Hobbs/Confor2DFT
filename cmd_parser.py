@@ -49,13 +49,11 @@ class ProgramController:
             parents=[self.top_parent_parser],
             help="Generate input files for a conformer search."
         )
-
         self.conf_gen_subparsers = self.conf_gen.add_subparsers(
             required=True,
             dest="ConformerMode",
             help="Specify which package to write input files for."
         )
-
         # Create shared args parser for conformer mode
         self.conf_gen_common_parser = argparse.ArgumentParser(add_help=False)
 
@@ -77,7 +75,7 @@ class ProgramController:
             help="Number of CPUs allocated to the HPC calculation."
         )
         self.conf_gen_common_parser.add_argument(
-            "-rt", "--RunTime",
+            "-t", "--RunTime",
             type=str,
             default="24:00:00",
             help="Maximum runtime allowed on the HPC system."
@@ -91,13 +89,13 @@ class ProgramController:
             )
         )
         self.conf_gen_common_parser.add_argument(
-            "-n", "--NumberConformers",
+            "-rn", "--RDNumConf",
             type=int,
             default=100,
             help="Number of conformers for the initial RDKit search."
         )
         self.conf_gen_common_parser.add_argument(
-            "-m", "--MaximumIterations",
+            "-rm", "--RDMaxIter",
             type=int,
             default=1000,
             help=(
@@ -105,7 +103,6 @@ class ProgramController:
                 "step."
             )
         )
-
         self.parse_conf_gen_crest_input()
         self.parse_conformer_orca_input()
 
@@ -114,10 +111,10 @@ class ProgramController:
         crest_write = self.conf_gen_subparsers.add_parser(
             "crest",
             parents=[self.top_parent_parser, self.conf_gen_common_parser],
-            help="CREST input mode."
+            help="CREST output mode."
         )
         crest_write.add_argument(
-            "-ol", "--OptimisationLevel",
+            "-cl", "--CRESTOptLevel",
             type=str,
             default="extreme",
             choices=[
@@ -127,7 +124,7 @@ class ProgramController:
             help="Convergence conditions for CREST optimisation steps."
         )
         crest_write.add_argument(
-            "-me", "--CRESTMethod",
+            "-cm", "--CRESTMethod",
             type=str,
             default="gfn2",
             choices=["gfnff", "gfn0", "gfn1", "gfn2"],
@@ -143,17 +140,17 @@ class ProgramController:
         orca_write = self.conf_gen_subparsers.add_parser(
             "orca",
             parents=[self.top_parent_parser, self.conf_gen_common_parser],
-            help="ORCA input mode using ORCA GOAT."
+            help="ORCA output mode for using ORCA GOAT."
         )
         orca_write.add_argument(
-            "-mo", "--GOATMode",
+            "-omo", "--GOATMode",
             type=str,
             default="GOAT",
             choices=["GOAT", "GOAT-ENTROPY", "GOAT-EXPLORE"],
             help="Specific mode for ORCA GOAT to run."
         )
         orca_write.add_argument(
-            "-me", "--GOATMethod",
+            "-om", "--GOATMethod",
             type=str,
             default="gfn2",
             choices=["gfnff", "gfn0", "gfn1", "gfn2"],
@@ -162,11 +159,34 @@ class ProgramController:
                 "and conformer searching."
             )
         )
+        orca_write.add_argument(
+            "-cf", "--ConvForced",
+            type=str2bool,
+            choices=[True, False],
+            help=(
+                "Specifies whether ORCA can proceed with the GOAT calulation "
+                "if the initial scf optimisation fails. \"false\" specifies it can "
+                "continue while \"true\" specifies it cant."
+            )
+        )
+        orca_write.add_argument(
+            "-ol", "--GOATOptLevel",
+            type=str,
+            default="Default",
+            choices=[
+                "Sloppy", "Loose",  "Medium", "Default", "Strong",
+                "Tight", "VeryTight", "Extreme"
+            ],
+            help=(
+                "Convergence conditions for ORCA optimisation steps. More "
+                "details provided in the ORCA manual under \"SCF Convergence\""
+            )
+        )
         orca_write.set_defaults(func=self.commands["conformer_gen"])
 
     def parse_sort_input(self) -> None:
         """Create parser for ORCA input mode."""
-        self.top_subparsers.add_parser(
+        self.conf_sort = self.top_subparsers.add_parser(
             "conformer_sort",
             parents=[self.top_parent_parser],
             help=(
@@ -175,12 +195,52 @@ class ProgramController:
                 "calculation."
             )
         )
+        self.conf_sort_subparsers = self.conf_sort.add_subparsers(
+            required=True,
+            dest="InputMode",
+            help="Specify which package to read input files from."
+        )
+        self.conf_sort_common_parser = argparse.ArgumentParser(add_help=False)
+        self.conf_sort_common_parser.add_argument(
+            "InputFile",
+            type=str,
+            help="Name of the input file to be optimised and refined."
+        )
+        self.conf_sort_common_parser.add_argument(
+            "-f", "--FileName",
+            type=str,
+            default="confdft",
+            help="File name to use for conformer_gen input files."
+        )
+        self.conf_sort_common_parser.add_argument(
+            "-nc", "--NumCPUs",
+            type=int,
+            default=4,
+            help="Number of CPUs allocated to the HPC calculation."
+        )
+        self.conf_sort_common_parser.add_argument(
+            "-rt", "--RunTime",
+            type=str,
+            default="24:00:00",
+            help="Maximum runtime allowed on the HPC system."
+        )
+        self.conf_sort_common_parser.add_argument(
+            "-e", "--Email",
+            type=str,
+            help=(
+                "Email address to receive updates on job start, finish, "
+                "and failure."
+            )
+        )
+        self.parse_conf_sort_crest_input()
 
-
-
-
-
-
+    def parse_conf_sort_crest_input(self) -> None:
+        crest_write = self.conf_sort_subparsers.add_parser(
+            "crest",
+            parents=[self.top_parent_parser, self.conf_sort_common_parser],
+            help="CREST input mode."
+        )
+        crest_write.add_argument
 
 
 
@@ -242,3 +302,13 @@ class ProgramController:
         """Parse and return command-line arguments."""
         self.args = self.parser.parse_args()
         return self.args
+
+def str2bool(string):
+    if isinstance(string, bool):
+        return string
+    if string.lower() in ('true', 't', 'yes', '1'):
+        return True
+    elif string.lower() in ('false', 'f', 'no', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected (true/false).")

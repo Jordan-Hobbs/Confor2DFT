@@ -1,17 +1,25 @@
 [conformer_gen]
+FileName = "CREST_input"
 NumCPUs = 10
 RunTime = "24:00:00"
 Email = "j.l.hobbs@leeds.ac.uk"
-FileName = "CREST_input"
 
 [conformer_gen.RDKit_Settings]
-NumberConformers = 500
-MaximumIterations = 1000
+RDNumConf = 500
+RDMaxIter = 1000
 
 [conformer_gen.CREST_Settings]
-OptimisationLevel = "extreme"
+CRESTOptLevel = "extreme"
 CRESTMethod = "gfn2"
 
 [conformer_gen.ORCA_Settings]
 GOATMode = "GOAT"
 GOATMethod = "gfn2"
+GOATOptLevel = "Loose"
+ConvForced = "True"
+
+[conformer_sort]
+FileName = "CREST_input"
+NumCPUs = 10
+RunTime = "48:00:00"
+Email = "j.l.hobbs@leeds.ac.uk"

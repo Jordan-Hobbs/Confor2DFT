@@ -6,63 +6,44 @@ from exceptions import InvalidSmilesError
 
 def conformer_gen(args):
     try:
-        molecule = find_min_conformer(
-            args.SmilesString,
-            num_conf = args.NumberConformers,
-            max_opt_iters = args.MaximumIterations
-        )
+        molecule = find_min_conformer(args)
     except InvalidSmilesError as e:
         print(f"Error: {e}. Please provide a valid SMILES code")
         return
     
     if args.ConformerMode == "crest":
-        crest_files = writers.CRESTWriter(molecule, args.FileName)
+        crest_files = writers.CRESTWriter(molecule, args)
         crest_files.write_xyz()
-        crest_files.write_toml(
-            num_cpus = args.NumCPUs, 
-            optlevel = args.OptimisationLevel,
-            gfn_method = args.CRESTMethod
-        )
-        crest_files.write_sh(
-            run_time = args.RunTime,
-            num_cpus = args.NumCPUs,
-            email = args.Email
-        )
+        crest_files.write_toml()
+        crest_files.write_sh()
     elif args.ConformerMode == "orca":
-        orca_files = writers.ORCAWriter(molecule, args.FileName)
-        orca_files.write_inp(
-            mode = args.GOATMode,
-            method = args.GOATMethod
-        )
-        orca_files.write_sh(
-            run_time = args.RunTime,
-            num_cpus = args.NumCPUs,
-            email = args.Email
-        )
+        orca_files = writers.ORCAWriter(molecule, args)
+        orca_files.write_inp()
+        orca_files.write_sh()
 
-def find_min_conformer(smiles, num_conf: int = 100, max_opt_iters: int = 1000):
+def find_min_conformer(args):
     print("\n----------------------------------------------------------------")
     print("Generating initial CREST input structure:\n")
 
-    molecule = Chem.MolFromSmiles(smiles)
+    molecule = Chem.MolFromSmiles(args.SmilesString)
     if molecule is None:
-        raise InvalidSmilesError(f"Invalid SMILES string: '{smiles}'")
+        raise InvalidSmilesError(f"Invalid SMILES string: '{args.SmilesString}'")
 
     molecule_h = Chem.AddHs(molecule)
     Chem.rdCoordGen.AddCoords(molecule_h)
 
     print(
-        f"Generating {num_conf} conformers for initial sorting and "
+        f"Generating {args.RDNumConf} conformers for initial sorting and "
         "optimization using RDKit."
     )
     rdDistGeom.EmbedMultipleConfs(
         molecule_h,
-        num_conf,
+        args.RDNumConf,
         params=rdDistGeom.ETKDGv3()
     )
     conf_energy = rdForceFieldHelpers.MMFFOptimizeMoleculeConfs(
         molecule_h,
-        maxIters=max_opt_iters,
+        maxIters=args.RDMaxIter,
         ignoreInterfragInteractions=False
     )
 
