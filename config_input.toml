@@ -16,7 +16,9 @@ CRESTMethod = "gfn2"
 GOATMode = "GOAT"
 GOATMethod = "gfn2"
 GOATOptLevel = "Loose"
+GOATUphill = "GFN2XTB"
 ConvForced = "True"
+
 
 [conformer_sort]
 FileName = "CREST_input"

@@ -182,6 +182,17 @@ class ProgramController:
                 "details provided in the ORCA manual under \"SCF Convergence\""
             )
         )
+        orca_write.add_argument(
+            "ou", "--GOATUphil",
+            type=str,
+            choices=["gfnff", "gfn0", "gfn1", "gfn2"],
+            help=(
+                "Sets the calulation to use a cheaper xtb method for the "
+                "uphill confoermer finding stage. This (apparently) has little "
+                "effect on the conformers found and then a more expensive "
+                "method can be used for optimisation"
+            )
+        )
         orca_write.set_defaults(func=self.commands["conformer_gen"])
 
     def parse_sort_input(self) -> None:

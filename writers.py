@@ -27,11 +27,23 @@ class ORCAWriter:
             f"!{self.args.GOATMode} {methods.get(self.args.GOATMethod)}\n"
         )
 
+        goat_block = "%GOAT\n ALIGN TRUE\n"
+        if self.args.GOATUphill:
+            uphill = {
+                "gfnff": "GFNFF",
+                "gfn0": "GFN0XTB",
+                "gfn1": "GFN1XTB",
+                "gfn2": "GFN2XTB"
+            }
+            goat_block += f" GFNUPHILL {uphill.get(self.args.GOATUphill)}\n"
+        goat_block += "END\n"
+        
         scf_lines = []
         include_GOATOptLevel = (
             self.args.GOATOptLevel is not None 
             and self.args.GOATOptLevel.lower() != "default"
         )
+
         include_convforced = self.args.ConvForced is not None
         if include_GOATOptLevel or include_convforced:
             scf_lines.append("%scf")
@@ -44,6 +56,7 @@ class ORCAWriter:
 
         with open(f"{self.args.FileName}.inp", "w", newline="\n") as file:
             file.write(methods_text)
+            file.write(goat_block)
             if scf_block:
                 file.write(scf_block)
             file.write("* xyz 0 1\n")
