@@ -23,11 +23,13 @@ class ORCAWriter:
             "gfn1": "XTB1",
             "gfn2": "XTB2"
         }
+        method_type = methods.get(self.args.GOATMethod, self.args.GOATMethod)
         methods_text = (
-            f"!{self.args.GOATMode} {methods.get(self.args.GOATMethod)}\n"
+            f"!{self.args.GOATMode} {method_type}\n"
         )
 
-        goat_block = "%GOAT\n ALIGN TRUE\n"
+        goat_block = "%GOAT\n ALIGN TRUE\n ENDIFF 0.05\n"
+        print(self.args.GOATUphill)
         if self.args.GOATUphill:
             uphill = {
                 "gfnff": "GFNFF",
@@ -64,6 +66,7 @@ class ORCAWriter:
                 atom_symbol = atom.GetSymbol()
                 x, y, z = xyz_pos[index]
                 file.write(f"{atom_symbol} {x} {y} {z}\n")
+            file.write("*")
 
         print(f"{self.args.FileName}.inp file written successfully")
 

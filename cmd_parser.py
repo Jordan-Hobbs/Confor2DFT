@@ -183,14 +183,14 @@ class ProgramController:
             )
         )
         orca_write.add_argument(
-            "ou", "--GOATUphil",
+            "-ou", "--GOATUphil",
             type=str,
             choices=["gfnff", "gfn0", "gfn1", "gfn2"],
             help=(
                 "Sets the calulation to use a cheaper xtb method for the "
-                "uphill confoermer finding stage. This (apparently) has little "
+                "uphill conformer finding stage. This (apparently) has little "
                 "effect on the conformers found and then a more expensive "
-                "method can be used for optimisation"
+                "method can be used for downhill optimisation steps"
             )
         )
         orca_write.set_defaults(func=self.commands["conformer_gen"])
