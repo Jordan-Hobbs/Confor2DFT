@@ -183,7 +183,7 @@ class ProgramController:
             )
         )
         orca_write.add_argument(
-            "ou", "--GOATUphil",
+            "-ou", "--GOATUphill",
             type=str,
             choices=["gfnff", "gfn0", "gfn1", "gfn2"],
             help=(

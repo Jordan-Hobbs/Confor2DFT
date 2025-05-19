@@ -1,6 +1,6 @@
 [conformer_gen]
-FileName = "CREST_input"
-NumCPUs = 10
+FileName = "RM734U_GOAT"
+NumCPUs = 8
 RunTime = "24:00:00"
 Email = "j.l.hobbs@leeds.ac.uk"
 
@@ -8,16 +8,16 @@ Email = "j.l.hobbs@leeds.ac.uk"
 RDNumConf = 500
 RDMaxIter = 1000
 
-[conformer_gen.CREST_Settings]
-CRESTOptLevel = "extreme"
-CRESTMethod = "gfn2"
+#[conformer_gen.CREST_Settings]
+#CRESTOptLevel = "extreme"
+#CRESTMethod = "gfn2"
 
 [conformer_gen.ORCA_Settings]
 GOATMode = "GOAT"
 GOATMethod = "gfn2"
-GOATOptLevel = "Loose"
-GOATUphill = "GFN2XTB"
-ConvForced = "True"
+#GOATOptLevel = "Loose"
+#GOATUphill = "GFN2XTB"
+#ConvForced = "True"
 
 
 [conformer_sort]

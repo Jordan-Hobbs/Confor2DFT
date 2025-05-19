@@ -17,6 +17,8 @@ class ORCAWriter:
         xyz_pos = self.molecule.GetConformer().GetPositions()
         xyz_pos = np.round(xyz_pos, 4)
 
+        pal_block = f"%PAL\n nprocs {self.args.NumCPUs}\nEND\n"
+
         methods = {
             "gfnff": "XTBFF",
             "gfn0": "XTB0",
@@ -56,6 +58,7 @@ class ORCAWriter:
 
         with open(f"{self.args.FileName}.inp", "w", newline="\n") as file:
             file.write(methods_text)
+            file.write(pal_block)
             file.write(goat_block)
             if scf_block:
                 file.write(scf_block)
@@ -64,6 +67,7 @@ class ORCAWriter:
                 atom_symbol = atom.GetSymbol()
                 x, y, z = xyz_pos[index]
                 file.write(f"{atom_symbol} {x} {y} {z}\n")
+            file.write("*")
 
         print(f"{self.args.FileName}.inp file written successfully")
 
@@ -73,13 +77,15 @@ class ORCAWriter:
             "#!/bin/bash\n"
             f"#SBATCH --job-name={self.args.FileName}\n"
             f"#SBATCH --time={self.args.RunTime}\n"
-            "#SBATCH --ntasks=1\n"
+            f"#SBATCH --ntasks={self.args.NumCPUs}\n"
             "#SBATCH --mem-per-cpu=1G\n"
-            f"#SBATCH --cpus-per-task={self.args.NumCPUs}\n"
+            "#SBATCH --cpus-per-task=1\n"
             "#SBATCH --mail-type=BEGIN,END,FAIL\n"
             f"#SBATCH --mail-user={self.args.Email}\n"
             "\n"
             "module load orca\n"
+            "module load openmpi\n"
+            "export RSH_COMMAND=\"/usr/bin/ssh\"\n"
             "\n"
             f"INPUT_FILE=\"{self.args.FileName}\"\n"
             "LAUNCH_DIR=$PWD\n"
@@ -87,14 +93,12 @@ class ORCAWriter:
             "mkdir -p \"${WORKING_DIR}\"\n"
             "cp \"${LAUNCH_DIR}/${INPUT_FILE}.inp\" \"${WORKING_DIR}/${INPUT_FILE}.inp\"\n"
             "\n"
-            "orca \"${WORKING_DIR}/${INPUT_FILE}.inp\" > \"${LAUNCH_DIR}/${INPUT_FILE}.out\"\n"
+            "/opt/apps/pkg/applications/orca/orca_6_0_1_linux_x86-64_shared_openmpi416/orca \"${WORKING_DIR}/${INPUT_FILE}.inp\" > \"${LAUNCH_DIR}/${INPUT_FILE}.out\"\n"
             "wait\n"
             "\n"
-            "mv \"${WORKING_DIR}/${INPUT_FILE}.gbw\" \"${LAUNCH_DIR}/${INPUT_FILE}.gbw\"\n"
             "mv \"${WORKING_DIR}/${INPUT_FILE}.globalminimum.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.globalminimum.xyz\"\n"
             "mv \"${WORKING_DIR}/${INPUT_FILE}.finalensemble.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.finalensemble.xyz\"\n"
-            "\n"
-            "rm -rf \"${WORKING_DIR}\"\n"
+            "rm slurm"
         )
 
         with open(f"{self.args.FileName}.sh", "w", newline="\n") as file:
