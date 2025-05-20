@@ -84,6 +84,7 @@ class ORCAWriter:
             f"#SBATCH --mail-user={self.args.Email}\n"
             "\n"
             "module load orca\n"
+            "module load crest\n"
             "module load openmpi\n"
             "export RSH_COMMAND=\"/usr/bin/ssh\"\n"
             "\n"
@@ -96,9 +97,16 @@ class ORCAWriter:
             "/opt/apps/pkg/applications/orca/orca_6_0_1_linux_x86-64_shared_openmpi416/orca \"${WORKING_DIR}/${INPUT_FILE}.inp\" > \"${LAUNCH_DIR}/${INPUT_FILE}.out\"\n"
             "wait\n"
             "\n"
+            "sed -i \"s/ converged=true//\" \"${WORKING_DIR}/${INPUT_FILE}.finalensemble.xyz\"\n"
+            "\n"
+            "crest ${WORKING_DIR}/${INPUT_FILE}.globalminimum.xyz --cregen ${WORKING_DIR}/${INPUT_FILE}.finalensemble.xyz\n"
+            "wait\n"
             "mv \"${WORKING_DIR}/${INPUT_FILE}.globalminimum.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.globalminimum.xyz\"\n"
             "mv \"${WORKING_DIR}/${INPUT_FILE}.finalensemble.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.finalensemble.xyz\"\n"
-            "rm slurm"
+            "\n"
+            "mv \"${WORKING_DIR}/${INPUT_FILE}.finalensemble.xyz.sorted\" \"${LAUNCH_DIR}/${INPUT_FILE}.sortedensemble.xyz\"\n"
+            "mv \"${WORKING_DIR}/crest_ensemble.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.totalensemble.xyz\"\n"
+            "mv \"${WORKING_DIR}/crest.energies\" \"${LAUNCH_DIR}/${INPUT_FILE}.energies\""
         )
 
         with open(f"{self.args.FileName}.sh", "w", newline="\n") as file:
