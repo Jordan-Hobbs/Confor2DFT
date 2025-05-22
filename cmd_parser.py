@@ -197,7 +197,7 @@ class ProgramController:
 
     def parse_sort_input(self) -> None:
         """Create parser for ORCA input mode."""
-        self.conf_sort = self.top_subparsers.add_parser(
+        conf_sort = self.top_subparsers.add_parser(
             "conformer_sort",
             parents=[self.top_parent_parser],
             help=(
@@ -206,32 +206,32 @@ class ProgramController:
                 "calculation."
             )
         )
-        self.conf_sort.add_argument(
+        conf_sort.add_argument(
             "InputFile",
             type=str,
             help="Name of the input file to be optimised and refined. The must "
             "be in the .xyz format where the comment line containes the energy "
             "of the conformer and nothing else."
         )
-        self.conf_sort.add_argument(
+        conf_sort.add_argument(
             "-f", "--FileName",
             type=str,
             default="confdft",
             help="File name to use for conformer_gen input files."
         )
-        self.conf_sort.add_argument(
+        conf_sort.add_argument(
             "-nc", "--NumCPUs",
             type=int,
             default=4,
             help="Number of CPUs allocated to the HPC calculation."
         )
-        self.conf_sort.add_argument(
+        conf_sort.add_argument(
             "-rt", "--RunTime",
             type=str,
             default="24:00:00",
             help="Maximum runtime allowed on the HPC system."
         )
-        self.conf_sort.add_argument(
+        conf_sort.add_argument(
             "-e", "--Email",
             type=str,
             help=(
@@ -239,9 +239,17 @@ class ProgramController:
                 "and failure."
             )
         )
-
-
-
+        conf_sort.add_argument(
+            "-fu", "--Functional",
+            type=str,
+            help="DFT functional to be used by ORCA"
+        )
+        conf_sort.add_argument(
+            "-bs", "--BasisSet",
+            type=str,
+            help="Basis set to be used by ORCA"
+        )
+        conf_sort.set_defaults(func=self.commands["conformer_gen"])
 
 
 

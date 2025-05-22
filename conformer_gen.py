@@ -4,7 +4,7 @@ from rdkit.Chem import rdDistGeom, rdForceFieldHelpers
 import writers
 from exceptions import InvalidSmilesError
 
-def conformer_gen(args):
+def gen(args):
     try:
         molecule = find_min_conformer(args)
     except InvalidSmilesError as e:

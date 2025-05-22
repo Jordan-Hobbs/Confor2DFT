@@ -6,7 +6,7 @@ def main():
 
     # Sets command functions
     commands = {
-        "conformer_gen": conformer_gen.conformer_gen
+        "conformer_gen": conformer_gen.gen
     }
 
     # Initialize parser
