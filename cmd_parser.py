@@ -206,36 +206,32 @@ class ProgramController:
                 "calculation."
             )
         )
-        self.conf_sort_subparsers = self.conf_sort.add_subparsers(
-            required=True,
-            dest="InputMode",
-            help="Specify which package to read input files from."
-        )
-        self.conf_sort_common_parser = argparse.ArgumentParser(add_help=False)
-        self.conf_sort_common_parser.add_argument(
+        self.conf_sort.add_argument(
             "InputFile",
             type=str,
-            help="Name of the input file to be optimised and refined."
+            help="Name of the input file to be optimised and refined. The must "
+            "be in the .xyz format where the comment line containes the energy "
+            "of the conformer and nothing else."
         )
-        self.conf_sort_common_parser.add_argument(
+        self.conf_sort.add_argument(
             "-f", "--FileName",
             type=str,
             default="confdft",
             help="File name to use for conformer_gen input files."
         )
-        self.conf_sort_common_parser.add_argument(
+        self.conf_sort.add_argument(
             "-nc", "--NumCPUs",
             type=int,
             default=4,
             help="Number of CPUs allocated to the HPC calculation."
         )
-        self.conf_sort_common_parser.add_argument(
+        self.conf_sort.add_argument(
             "-rt", "--RunTime",
             type=str,
             default="24:00:00",
             help="Maximum runtime allowed on the HPC system."
         )
-        self.conf_sort_common_parser.add_argument(
+        self.conf_sort.add_argument(
             "-e", "--Email",
             type=str,
             help=(
@@ -243,15 +239,6 @@ class ProgramController:
                 "and failure."
             )
         )
-        self.parse_conf_sort_crest_input()
-
-    def parse_conf_sort_crest_input(self) -> None:
-        crest_write = self.conf_sort_subparsers.add_parser(
-            "crest",
-            parents=[self.top_parent_parser, self.conf_sort_common_parser],
-            help="CREST input mode."
-        )
-        crest_write.add_argument
 
 
 
