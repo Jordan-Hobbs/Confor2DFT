@@ -101,13 +101,11 @@ class ORCAWriter:
             "\n"
             "sed -i \"s/ converged=true//\" \"${INPUT_FILE}.finalensemble.xyz\"\n"
             "\n"
-            "crest ${INPUT_FILE}.globalminimum.xyz --cregen ${INPUT_FILE}.finalensemble.xyz\n"
+            "crest ${INPUT_FILE}.globalminimum.xyz --cregen ${INPUT_FILE}.finalensemble.xyz > \"${LAUNCH_DIR}/${INPUT_FILE}.CREST.out\"\n"
             "wait\n"
             "mv \"${INPUT_FILE}.globalminimum.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.globalminimum.xyz\"\n"
-            "mv \"${INPUT_FILE}.finalensemble.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.finalensemble.xyz\"\n"
-            "\n"
-            "mv \"${INPUT_FILE}.finalensemble.xyz.sorted\" \"${LAUNCH_DIR}/${INPUT_FILE}.sortedensemble.xyz\"\n"
-            "mv \"crest_ensemble.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.totalensemble.xyz\"\n"
+            "mv \"${INPUT_FILE}.finalensemble.xyz.sorted\" \"${LAUNCH_DIR}/${INPUT_FILE}.totalensemble.xyz\"\n"
+            "mv \"crest_ensemble.xyz\" \"${LAUNCH_DIR}/${INPUT_FILE}.ensemble.xyz\"\n"
             "mv \"crest.energies\" \"${LAUNCH_DIR}/${INPUT_FILE}.energies\""
         )
 
